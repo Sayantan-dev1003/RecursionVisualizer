@@ -210,7 +210,7 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
 
             <CodeDisplay code={currentCode} language={selectedLanguage} />
 
-            <div className="flex items-center gap-4 mb-6 text-sm">
+            <div className="flex items-center gap-4 mb-6 text-sm mobile:text-xs">
                 <label htmlFor="problem-input" className="text-gray-300 font-medium urbanist-font">
                     Enter {currentProblemData.inputType === 'number' ? 'N' : 'Input'}:
                 </label>
@@ -233,7 +233,7 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
             </div>
 
             {visualizationLog.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-4 justify-center text-sm">
+                <div className="flex flex-wrap gap-3 mt-4 justify-center text-sm mobile:text-xs">
                     <button
                         onClick={prevStep}
                         disabled={currentStep === 0}
