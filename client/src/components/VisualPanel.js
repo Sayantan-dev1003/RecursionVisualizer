@@ -1,11 +1,72 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
+  // State to manage the elements currently visible on the "stack"
+  const [visualStack, setVisualStack] = useState([]);
+  // State to manage the current "narration" message at the top
+  const [currentNarration, setCurrentNarration] = useState("");
+
+  // Helper function to capitalize the first letter and add spaces for camelCase
   const formatProblemName = (problem) => {
     return problem.charAt(0).toUpperCase() + problem.slice(1).replace(/([A-Z])/g, ' $1');
   };
+
+  // Effect to update the visual stack and narration based on the current step
+  useEffect(() => {
+    // Reset stack and narration when problem changes or a new run starts
+    if (currentStep === 0) {
+      setVisualStack([]);
+      setCurrentNarration("");
+    }
+
+    // Process the current log entry for stack and narration updates
+    if (visualizationLog.length > 0 && currentStep < visualizationLog.length) {
+      const entry = visualizationLog[currentStep];
+
+      // Update narration
+      let narrationText = "";
+      if (entry.type === 'call' && entry.problem !== 'towerOfHanoi') {
+        narrationText = `Calling ${formatProblemName(entry.problem)}(${entry.n})`;
+      } else if (entry.type === 'return' && entry.problem !== 'towerOfHanoi') {
+        narrationText = `Returning ${entry.value} from ${formatProblemName(entry.problem)}(${entry.fromN})`;
+      } else if (entry.type === 'move' && entry.problem === 'towerOfHanoi') {
+        narrationText = `MOVE Disk ${entry.disk} from ${entry.from} to ${entry.to}`;
+      } else if (entry.type === 'call' && entry.problem === 'towerOfHanoi') {
+        narrationText = `CALL: TowerOfHanoi(${entry.n}, ${entry.source}, ${entry.auxiliary}, ${entry.destination})`;
+      } else if (entry.type === 'return' && entry.problem === 'towerOfHanoi') {
+        narrationText = `RETURN: from TowerOfHanoi(${entry.fromN})`;
+      }
+      setCurrentNarration(narrationText);
+
+      // Update visual stack only for 'call' and 'return' types (not 'move' for ToH stack)
+      if (selectedProblem !== 'towerOfHanoi') {
+        if (entry.type === 'call') {
+          // Push a new call onto the stack
+          setVisualStack(prevStack => [...prevStack, { ...entry, visualId: entry.id }]);
+        } else if (entry.type === 'return') {
+          // Pop the corresponding call from the stack
+          setVisualStack(prevStack => {
+            const newStack = [...prevStack];
+            // Find the last call entry with the matching ID to remove it
+            const callIndex = newStack.findIndex(
+              item => item.visualId === entry.id && item.type === 'call' // Match by ID and type 'call'
+            );
+            if (callIndex !== -1) {
+              newStack.splice(callIndex, 1); // Remove it
+            }
+            return newStack;
+          });
+        }
+      } else {
+        // For Tower of Hanoi, the stack visualization is different (or not applicable in the same way)
+        // We'll keep the visualStack empty for ToH for this stack representation
+        setVisualStack([]);
+      }
+
+    }
+  }, [currentStep, visualizationLog, selectedProblem]); // Dependencies for useEffect
 
   return (
     <section className='w-full min-h-full bg-[#202020] rounded-lg p-6 flex flex-col'>
@@ -16,51 +77,108 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
         Watch the function calls and returns as the recursion unfolds here.
       </p>
 
-      <div className="flex-grow bg-[#1a1a1a] p-4 rounded-md border border-gray-700 overflow-y-auto relative">
+      <div className="flex-grow bg-[#1a1a1a] p-4 rounded-md border border-gray-700 relative flex mobile:flex-col">
         {visualizationLog.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10">Run the function to see the visualization here.</p>
+          <p className="text-center text-gray-500 mt-10  w-full">Run the function to see the visualization here.</p>
         ) : (
-          <div className="space-y-2">
-            {visualizationLog.slice(0, currentStep + 1).map((entry, index) => (
-              <div
-                key={index}
-                className={`w-2/5 mobile:w-1/2 p-3 rounded-md shadow-sm transition-all duration-300 ease-in-out
-                  ${entry.type === 'call'
-                    ? 'bg-blue-800 border-l-4 border-blue-500 text-white'
-                    : 'bg-green-800 border-l-4 border-green-500 text-white'
-                  }
-                  ${index === currentStep ? 'ring-2 ring-purple-400 scale-105' : ''}
-                `}
-                style={{ marginLeft: `${entry.indent * 20}px` }}
-              >
-                {entry.type === 'call' && entry.problem !== 'towerOfHanoi' && (
-                  <p className="font-mono text-sm mobile:text-[0.7rem] text-gray-100">
-                    CALL: {formatProblemName(entry.problem)}(<span className="font-bold">{entry.n}</span>)
-                  </p>
-                )}
-                {entry.type === 'return' && entry.problem !== 'towerOfHanoi' && (
-                  <p className="font-mono text-sm mobile:text-[0.7rem] text-gray-100">
-                    RETURN: <span className="font-bold">{entry.value}</span> (from {formatProblemName(entry.problem)}(<span className="font-bold">{entry.fromN}</span>))
-                  </p>
-                )}
-                {entry.type === 'move' && entry.problem === 'towerOfHanoi' && (
-                  <p className="font-mono text-sm mobile:text-[0.7rem] text-yellow-100">
-                    MOVE: Disk <span className="font-bold">{entry.disk}</span> from {entry.from} to {entry.to}
-                  </p>
-                )}
-                {entry.type === 'call' && entry.problem === 'towerOfHanoi' && (
-                  <p className="font-mono text-sm mobile:text-[0.7rem] text-blue-100">
-                    CALL: TowerOfHanoi(<span className="font-bold">{entry.n}</span>, {entry.source}, {entry.auxiliary}, {entry.destination})
-                  </p>
-                )}
-                {entry.type === 'return' && entry.problem === 'towerOfHanoi' && (
-                  <p className="font-mono text-sm mobile:text-[0.7rem] text-green-100">
-                    RETURN: from TowerOfHanoi(<span className="font-bold">{entry.fromN}</span>)
-                  </p>
-                )}
+          <>
+            {/* Left side: Chronological Log of Events */}
+            <div className="w-3/5 mobile:w-full h-[60vh] overflow-y-auto pr-4 mobile:pr-0 mobile:pb-4">
+              <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Event Log:</h3>
+              <div className="space-y-2 p-2">
+                {visualizationLog.slice(0, currentStep + 1).map((entry, index) => (
+                  <div
+                    key={`${entry.id}-${index}`}
+                    className={`w-[70%] p-3 rounded-md shadow-sm transition-all duration-300 ease-in-out
+                      ${entry.type === 'call' && entry.problem !== 'towerOfHanoi'
+                        ? 'bg-blue-800 border-l-4 border-blue-500 text-white'
+                        : entry.type === 'return' && entry.problem !== 'towerOfHanoi'
+                          ? 'bg-green-800 border-l-4 border-green-500 text-white'
+                          : entry.type === 'move' && entry.problem === 'towerOfHanoi'
+                            ? 'bg-yellow-800 border-l-4 border-yellow-500 text-yellow-100'
+                            : 'bg-gray-700 text-gray-300'
+                      }
+                      ${index === currentStep ? 'ring-2 ring-purple-400 scale-105' : ''}
+                    `}
+                    style={{ marginLeft: `${entry.indent * 20}px` }}
+                  >
+                    {entry.type === 'call' && entry.problem !== 'towerOfHanoi' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-gray-100">
+                        CALL: {formatProblemName(entry.problem)}(<span className="font-bold">{entry.n}</span>)
+                      </p>
+                    )}
+                    {entry.type === 'return' && entry.problem !== 'towerOfHanoi' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-gray-100">
+                        RETURN: <span className="font-bold">{entry.value}</span> (from {formatProblemName(entry.problem)}(<span className="font-bold">{entry.fromN}</span>))
+                      </p>
+                    )}
+                    {entry.type === 'move' && entry.problem === 'towerOfHanoi' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-yellow-100">
+                        MOVE: Disk <span className="font-bold">{entry.disk}</span> from {entry.from} to {entry.to}
+                      </p>
+                    )}
+                    {entry.type === 'call' && entry.problem === 'towerOfHanoi' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-blue-100">
+                        CALL: TowerOfHanoi(<span className="font-bold">{entry.n}</span>, {entry.source}, {entry.auxiliary}, {entry.destination})
+                      </p>
+                    )}
+                    {entry.type === 'return' && entry.problem === 'towerOfHanoi' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-green-100">
+                        RETURN: from TowerOfHanoi(<span className="font-bold">{entry.fromN}</span>)
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+
+            {selectedProblem !== 'towerOfHanoi' && (
+              <div className="w-2/5 mobile:w-full h-full flex flex-col-reverse items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0 relative">
+                
+                <div className="w-full flex-grow flex flex-col items-center justify-start">
+                  {visualStack.map((entry) => (
+                    <div
+                      key={entry.visualId}
+                      className={`
+                        w-11/12 p-3 my-1 rounded-md shadow-lg
+                        transition-all duration-300 ease-in-out transform
+                        ${entry.type === 'call'
+                          ? 'bg-blue-700 border-l-4 border-blue-400 text-white animate-fade-in-up'
+                          : ''
+                        }
+                        ${entry.visualId === visualizationLog[currentStep]?.id && visualizationLog[currentStep]?.type === 'call' ? 'ring-2 ring-purple-400 scale-105' : ''} /* Highlight active call on stack */
+                      `}
+                      style={{ zIndex: visualStack.length - entry.indent }}
+                    >
+                      <p className="font-mono text-sm md:text-base text-gray-100 text-center">
+                        {formatProblemName(entry.problem)}(<span className="font-bold">{entry.n}</span>)
+                      </p>
+                    </div>
+                  ))}
+                  <h3 className=" text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
+                  {currentNarration && (
+                    <div className="bg-purple-700 text-white px-4 py-2 rounded-lg shadow-lg text-center z-10 text-sm animate-fade-in-down">
+                      {currentNarration}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {selectedProblem === 'towerOfHanoi' && (
+              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-20 border-l border-gray-700 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0">
+                <h3 className="text-gray-300 text-lg mb-4">Tower of Hanoi Graphical View:</h3>
+                <div className="flex-grow w-full bg-[#1a1a1a] p-4 rounded-md border border-gray-700 flex items-center justify-center">
+                  <p className="text-gray-500 text-center">
+                    (Graphical Tower of Hanoi visualization will go here!)
+                  </p>
+                </div>
+                <p className="text-gray-400 text-xs mt-4">
+                  (Moves are shown in the Event Log on the left.)
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

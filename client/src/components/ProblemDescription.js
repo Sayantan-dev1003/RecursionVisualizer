@@ -20,7 +20,7 @@ const ProblemDescriptions = {
       `0 <= n <= 12`
     ],
     inputType: 'number',
-    defaultInput: 5,
+    defaultInput: 4,
   },
   fibonacci: {
     title: "Fibonacci Sequence",
@@ -48,7 +48,7 @@ const ProblemDescriptions = {
       `0 <= n <= 10`
     ],
     inputType: 'number',
-    defaultInput: 7,
+    defaultInput: 5,
   },
   towerOfHanoi: {
     title: "Tower of Hanoi",
