@@ -166,7 +166,7 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
     }
 
     return (
-        <section className='w-[40%] mobile:w-full min-h-full bg-[#202020] rounded-lg p-6 flex flex-col mobile:p-4'>
+        <section className='w-full mobile:w-full min-h-full bg-[#202020] rounded-lg p-6 flex flex-col mobile:p-4'>
             <div className="mb-6 pb-4 border-b border-gray-500">
                 <h2 className=' text-gray-200 font-bold text-2xl mb-2 mobile:text-xl'>{currentProblemData.title}</h2>
                 <p className='text-gray-400 text-sm mb-3' dangerouslySetInnerHTML={{ __html: currentProblemData.description }}></p>
