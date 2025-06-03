@@ -3,29 +3,22 @@
 import React, { useState, useEffect } from 'react';
 
 const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
-  // State to manage the elements currently visible on the "stack"
   const [visualStack, setVisualStack] = useState([]);
-  // State to manage the current "narration" message at the top
   const [currentNarration, setCurrentNarration] = useState("");
 
-  // Helper function to capitalize the first letter and add spaces for camelCase
   const formatProblemName = (problem) => {
     return problem.charAt(0).toUpperCase() + problem.slice(1).replace(/([A-Z])/g, ' $1');
   };
 
-  // Effect to update the visual stack and narration based on the current step
   useEffect(() => {
-    // Reset stack and narration when problem changes or a new run starts
     if (currentStep === 0) {
       setVisualStack([]);
       setCurrentNarration("");
     }
 
-    // Process the current log entry for stack and narration updates
     if (visualizationLog.length > 0 && currentStep < visualizationLog.length) {
       const entry = visualizationLog[currentStep];
 
-      // Update narration
       let narrationText = "";
       if (entry.type === 'call' && entry.problem !== 'towerOfHanoi') {
         narrationText = `Calling ${formatProblemName(entry.problem)}(${entry.n})`;
@@ -40,33 +33,27 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
       }
       setCurrentNarration(narrationText);
 
-      // Update visual stack only for 'call' and 'return' types (not 'move' for ToH stack)
       if (selectedProblem !== 'towerOfHanoi') {
         if (entry.type === 'call') {
-          // Push a new call onto the stack
           setVisualStack(prevStack => [...prevStack, { ...entry, visualId: entry.id }]);
         } else if (entry.type === 'return') {
-          // Pop the corresponding call from the stack
           setVisualStack(prevStack => {
             const newStack = [...prevStack];
-            // Find the last call entry with the matching ID to remove it
             const callIndex = newStack.findIndex(
-              item => item.visualId === entry.id && item.type === 'call' // Match by ID and type 'call'
+              item => item.visualId === entry.id && item.type === 'call'
             );
             if (callIndex !== -1) {
-              newStack.splice(callIndex, 1); // Remove it
+              newStack.splice(callIndex, 1);
             }
             return newStack;
           });
         }
       } else {
-        // For Tower of Hanoi, the stack visualization is different (or not applicable in the same way)
-        // We'll keep the visualStack empty for ToH for this stack representation
         setVisualStack([]);
       }
 
     }
-  }, [currentStep, visualizationLog, selectedProblem]); // Dependencies for useEffect
+  }, [currentStep, visualizationLog, selectedProblem]);
 
   return (
     <section className='w-full min-h-full bg-[#202020] rounded-lg p-6 flex flex-col'>
@@ -82,7 +69,6 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
           <p className="text-center text-gray-500 mt-10  w-full">Run the function to see the visualization here.</p>
         ) : (
           <>
-            {/* Left side: Chronological Log of Events */}
             <div className="w-3/5 mobile:w-full h-[60vh] overflow-y-auto pr-4 mobile:pr-0 mobile:pb-4">
               <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Event Log:</h3>
               <div className="space-y-2 p-2">
