@@ -35,7 +35,7 @@ export default function HomePage() {
                         />
                     </div>
 
-                    <div className='w-[60%] h-full overflow-y-auto mobile:w-full mobile:h-[90vh]'>
+                    <div className='w-[60%] h-full overflow-y-auto mobile:w-full mobile:h-full'>
                         <VisualPanel
                             visualizationLog={visualizationLog}
                             currentStep={currentStep}
