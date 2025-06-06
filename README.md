@@ -98,14 +98,14 @@ To get a local copy up and running, follow these simple steps.
 ## Project Structure
 
 RECURSION-VISUALIZER/
-├── .client/             
-│    ├── .next/               
-│    ├── node_modules/        
+├── .client/
+│    ├── .next/
+│    ├── node_modules/
 │    ├── public/
-│    ├── src/                 
+│    ├── src/
 │    │   ├── app/
-│    │   │   ├── layout.js    
-│    │   │   └── page.js      
+│    │   │   ├── layout.js
+│    │   │   └── page.js
 │    │   ├── components/
 │    │   │   ├── CodeDisplay.js
 │    │   │   ├── CodePanel.js
