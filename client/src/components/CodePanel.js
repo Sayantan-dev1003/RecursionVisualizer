@@ -3,15 +3,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import LanguageSelector from './LanguageSelector.js';
 import CodeDisplay from './CodeDisplay.js';
-import codeSnippets from './CodeSnippets.js';
-import problemDescriptions from './ProblemDescription.js';
+import codeSnippets from '../data/CodeSnippets.js';
+import problemDescriptions from '../data/ProblemDescription.js';
 
 const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIsPlaying, currentStep, visualizationLog, isPlaying, animationIntervalRef }) => {
     const [selectedLanguage, setSelectedLanguage] = useState('JavaScript');
-    // Initialize input based on the default for the currently selected problem
     const [problemInput, setProblemInput] = useState(problemDescriptions[selectedProblem]?.defaultInput || 0);
 
-    // Effect to reset input and visualization when selectedProblem changes
     useEffect(() => {
         setProblemInput(problemDescriptions[selectedProblem]?.defaultInput || 0);
         setVisualizationLog([]);
@@ -23,18 +21,16 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
     }, [selectedProblem, setVisualizationLog, setCurrentStep, setIsPlaying, animationIntervalRef]);
 
 
-    // --- Problem-specific Logic with Visualization Logging ---
-    // This will be a wrapper that calls the correct instrumented function
     const runProblemVisualization = () => {
-        setVisualizationLog([]); // Clear previous log
+        setVisualizationLog([]);
         setCurrentStep(0);
-        setIsPlaying(false); // Stop any ongoing animation
+        setIsPlaying(false);
         if (animationIntervalRef.current) {
             clearInterval(animationIntervalRef.current);
         }
 
         let tempLog = [];
-        let callIdCounter = 0; // Reset for each new run
+        let callIdCounter = 0;
 
         // Factorial Logic
         const instrumentedFactorial = (n, indent = 0) => {
@@ -58,7 +54,7 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
             return result;
         };
 
-        // Fibonacci Logic (Placeholder - you'll implement this fully)
+        // Fibonacci Logic
         const instrumentedFibonacci = (n, indent = 0) => {
             const currentCallId = callIdCounter++;
             tempLog.push({ type: 'call', id: currentCallId, problem: 'fibonacci', n, indent, status: 'active' });
@@ -78,7 +74,7 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
             return result;
         };
 
-        // Tower of Hanoi Logic (Placeholder - you'll implement this fully, focusing on moves)
+        // Tower of Hanoi Logic
         const instrumentedTowerOfHanoi = (n, source, auxiliary, destination, indent = 0) => {
             const currentCallId = callIdCounter++;
             tempLog.push({ type: 'call', id: currentCallId, problem: 'towerOfHanoi', n, source, auxiliary, destination, indent, status: 'active' });
@@ -93,7 +89,7 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
 
             const callEntryIndex = tempLog.findIndex(entry => entry.id === currentCallId && entry.type === 'call' && entry.problem === 'towerOfHanoi' && entry.n === n && entry.status === 'active');
             if (callEntryIndex !== -1) {
-                tempLog[callEntryIndex] = { ...tempLog[callEntryIndex], status: 'returned' }; // No explicit return value for ToH
+                tempLog[callEntryIndex] = { ...tempLog[callEntryIndex], status: 'returned' };
             }
             tempLog.push({ type: 'return', id: currentCallId, problem: 'towerOfHanoi', indent, fromN: n });
         };
@@ -108,15 +104,15 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
                 instrumentedFibonacci(problemInput);
                 break;
             case 'towerOfHanoi':
-                instrumentedTowerOfHanoi(problemInput, 'A', 'B', 'C'); // Default pegs for ToH
+                instrumentedTowerOfHanoi(problemInput, 'A', 'B', 'C');
                 break;
             default:
                 console.error("Unknown problem selected:", selectedProblem);
         }
-        setVisualizationLog(tempLog); // Set the state once with the complete log
+        setVisualizationLog(tempLog);
     };
 
-    // --- Visualization Playback Controls ---
+    // Visualization Playback Controls
     const playVisualization = () => {
         if (visualizationLog.length === 0) return;
 
@@ -132,10 +128,10 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
                 } else {
                     setIsPlaying(false);
                     clearInterval(animationIntervalRef.current);
-                    return prevStep; // Stay at the last step
+                    return prevStep;
                 }
             });
-        }, 800); // Adjust speed as needed
+        }, 800);
     };
 
     const pauseVisualization = () => {
@@ -146,16 +142,15 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
     };
 
     const nextStep = () => {
-        pauseVisualization(); // Pause if playing
+        pauseVisualization();
         setCurrentStep(prevStep => Math.min(prevStep + 1, visualizationLog.length - 1));
     };
 
     const prevStep = () => {
-        pauseVisualization(); // Pause if playing
+        pauseVisualization();
         setCurrentStep(prevStep => Math.max(prevStep - 1, 0));
     };
 
-    // Get current problem data and code snippet
     const currentProblemData = problemDescriptions[selectedProblem];
     const currentCode = codeSnippets[selectedProblem]?.[selectedLanguage] || codeSnippets[selectedProblem]?.JavaScript;
 
