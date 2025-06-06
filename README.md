@@ -8,7 +8,6 @@
 * [Technologies Used](#technologies-used)
 * [Installation](#installation)
 * [Usage](#usage)
-* [Project Structure](#project-structure)
 * [Future Enhancements](#future-enhancements)
 
 ## Introduction
@@ -94,38 +93,6 @@ To get a local copy up and running, follow these simple steps.
     * Use `Pause` to stop the auto-playback.
     * `Previous` and `Next`: Manually step through the visualization one event at a time.
 7.  **Explore Tooltips:** Hover over various elements like the code display, call stack frames, event log entries, and control buttons for helpful explanations.
-
-## Project Structure
-
-RECURSION-VISUALIZER/
-├── .client/
-│    ├── .next/
-│    ├── node_modules/
-│    ├── public/
-│    ├── src/
-│    │   ├── app/
-│    │   │   ├── layout.js
-│    │   │   └── page.js
-│    │   ├── components/
-│    │   │   ├── CodeDisplay.js
-│    │   │   ├── CodePanel.js
-│    │   │   ├── Header.js
-│    │   │   ├── LanguageSelector.js
-│    │   │   └── VisualPanel.js
-│    │   ├── data/
-│    │   │   ├── CodeSnippets.js
-│    │   │   └── ProblemDescription.js
-│    │   └── styles/
-│    │       └── globals.css
-│    ├── .eslint.config.mjs
-│    ├── jsconfig.json
-│    ├── next.config.mjs
-│    ├── package-lock.json
-│    ├── package.json
-│    ├── postcss.config.js
-│    └── tailwind.config.js
-├── .gitignore
-└── README.md
 
 ## Future Enhancements
 
