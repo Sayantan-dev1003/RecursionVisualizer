@@ -68,17 +68,22 @@ To get a local copy up and running, follow these simple steps.
     yarn install
     ```
 
-3.  **Run the development server:**
+3. **Go to the client side folder.**
+    ```bash
+    cd client
+    ```
+
+4.  **Run the development server:**
     ```bash
     npm run dev
     # OR
     yarn dev
     ```
 
-4.  **Open in your browser:**
+5.  **Open in your browser:**
     Open [http://localhost:3000](http://localhost:3000) with your web browser to see the application.
 
-5. **Live URL**
+6. **Live URL**
    Open [https://recursion-visualizer-sigma.vercel.app/](https://recursion-visualizer-sigma.vercel.app/)
 
 ## Usage
