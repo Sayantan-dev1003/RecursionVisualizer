@@ -123,7 +123,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
               <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0">
                 <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
                 
-                <div className="w-full flex-grow flex flex-col-reverse items-center justify-start overflow-y-auto">
+                <div className="w-full flex-grow flex flex-col-reverse items-center justify-start overflow-y-hidden">
                   {[...visualStack].map((entry) => (
                     <div
                       key={entry.visualId}
@@ -146,7 +146,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                 </div>
 
                 {currentNarration && (
-                  <div className="bg-purple-700 text-white px-4 py-2 mt-4 rounded-lg shadow-lg text-center z-10 text-sm animate-fade-out-up mb-4">
+                  <div className="bg-purple-700 text-white px-4 py-2 mt-4 rounded-lg shadow-lg text-center z-10 text-xs animate-fade-out-up mb-4">
                     {currentNarration}
                   </div>
                 )}
