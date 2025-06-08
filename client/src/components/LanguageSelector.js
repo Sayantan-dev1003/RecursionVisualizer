@@ -11,6 +11,7 @@ const LanguageSelector = ({ selectedLanguage, onSelectLanguage }) => {
     <div className="flex flex-wrap gap-2 mb-6">
       {languages.map((lang) => (
         <button
+          suppressHydrationWarning
           key={lang}
           onClick={() => onSelectLanguage(lang)}
           // Apply different styles based on whether the language is selected

@@ -11,9 +11,10 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
   };
 
   useEffect(() => {
-    if (currentStep === 0) {
+    if (currentStep === 0 && visualizationLog.length === 0) {
       setVisualStack([]);
       setCurrentNarration("");
+      return;
     }
 
     if (visualizationLog.length > 0 && currentStep < visualizationLog.length) {
@@ -34,24 +35,24 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
       setCurrentNarration(narrationText);
 
       if (selectedProblem !== 'towerOfHanoi') {
-        if (entry.type === 'call') {
-          setVisualStack(prevStack => [...prevStack, { ...entry, visualId: entry.id }]);
-        } else if (entry.type === 'return') {
-          setVisualStack(prevStack => {
-            const newStack = [...prevStack];
-            const callIndex = newStack.findIndex(
-              item => item.visualId === entry.id && item.type === 'call'
+        const tempStack = [];
+        for (let i = 0; i <= currentStep; i++) {
+          const logEntry = visualizationLog[i];
+          if (logEntry.type === 'call') {
+            tempStack.push({ ...logEntry, visualId: logEntry.id });
+          } else if (logEntry.type === 'return') {
+            const callIndex = tempStack.findIndex(
+              item => item.visualId === logEntry.id && item.type === 'call'
             );
             if (callIndex !== -1) {
-              newStack.splice(callIndex, 1);
+              tempStack.splice(callIndex, 1);
             }
-            return newStack;
-          });
+          }
         }
+        setVisualStack(tempStack);
       } else {
         setVisualStack([]);
       }
-
     }
   }, [currentStep, visualizationLog, selectedProblem]);
 
@@ -66,7 +67,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
 
       <div className="flex-grow bg-[#1a1a1a] p-4 rounded-md border border-gray-700 relative flex mobile:flex-col">
         {visualizationLog.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10  w-full">Run the function to see the visualization here.</p>
+          <p className="text-center text-gray-500 mt-10 w-full">Run the function to see the visualization here.</p>
         ) : (
           <>
             <div className="w-3/5 mobile:w-full h-[60vh] overflow-y-auto pr-4 mobile:pr-0 mobile:pb-4">
@@ -118,21 +119,22 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
               </div>
             </div>
 
-            {selectedProblem !== 'towerOfHanoi' && (
-              <div className="w-2/5 mobile:w-full h-full flex flex-col-reverse items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0 relative">
+            {selectedProblem !== 'towerOfHanoi' ? (
+              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0">
+                <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
                 
-                <div className="w-full flex-grow flex flex-col items-center justify-start">
-                  {visualStack.map((entry) => (
+                <div className="w-full flex-grow flex flex-col-reverse items-center justify-start overflow-y-auto">
+                  {[...visualStack].map((entry) => (
                     <div
                       key={entry.visualId}
                       className={`
-                        w-11/12 p-3 my-1 rounded-md shadow-lg
+                        w-10/12 p-3 my-1 rounded-md shadow-lg overflow-y-hidden
                         transition-all duration-300 ease-in-out transform
                         ${entry.type === 'call'
-                          ? 'bg-blue-700 border-l-4 border-blue-400 text-white animate-fade-in-up'
+                          ? 'bg-blue-700 border-l-4 border-blue-400 text-white animate-fade-in-down'
                           : ''
                         }
-                        ${entry.visualId === visualizationLog[currentStep]?.id && visualizationLog[currentStep]?.type === 'call' ? 'ring-2 ring-purple-400 scale-105' : ''} /* Highlight active call on stack */
+                        ${entry.visualId === visualizationLog[currentStep]?.id && visualizationLog[currentStep]?.type === 'call' ? 'ring-2 ring-purple-400 scale-105' : ''}
                       `}
                       style={{ zIndex: visualStack.length - entry.indent }}
                     >
@@ -141,17 +143,15 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                       </p>
                     </div>
                   ))}
-                  <h3 className=" text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
-                  {currentNarration && (
-                    <div className="bg-purple-700 text-white px-4 py-2 rounded-lg shadow-lg text-center z-10 text-sm animate-fade-in-down">
-                      {currentNarration}
-                    </div>
-                  )}
                 </div>
-              </div>
-            )}
 
-            {selectedProblem === 'towerOfHanoi' && (
+                {currentNarration && (
+                  <div className="bg-purple-700 text-white px-4 py-2 mt-4 rounded-lg shadow-lg text-center z-10 text-sm animate-fade-out-up mb-4">
+                    {currentNarration}
+                  </div>
+                )}
+              </div>
+            ) : (
               <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-20 border-l border-gray-700 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0">
                 <h3 className="text-gray-300 text-lg mb-4">Tower of Hanoi Graphical View:</h3>
                 <div className="flex-grow w-full bg-[#1a1a1a] p-4 rounded-md border border-gray-700 flex items-center justify-center">

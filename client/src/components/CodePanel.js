@@ -220,6 +220,7 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
                     className="w-24 p-2 bg-[#3a3a3a] text-gray-200 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
                 <button
+                    suppressHydrationWarning
                     onClick={runProblemVisualization}
                     className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors duration-200 urbanist-font"
                 >

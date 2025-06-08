@@ -12,6 +12,7 @@ const Header = ({ selectedProblem, setSelectedProblem }) => {
             <p className='montserrat text-3xl font-bold text-gray-200 mobile:text-lg'>Recursion Visualizer</p>
 
             <select
+                suppressHydrationWarning
                 value={selectedProblem}
                 onChange={handleProblemChange}
                 className='bg-[#282828] w-1/3 max-w-xs p-2 rounded-md text-gray-300 border-none outline-none montserrat text-lg mobile:text-xs mobile:p-1.5'
