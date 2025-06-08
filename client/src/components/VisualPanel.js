@@ -219,8 +219,8 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
               </div>
             ) : (
               // TOWER OF HANOI GRAPHICAL VIEW
-              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-20 border-l border-gray-400 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-b mobile:pb-4 mobile:mb-6 mobile:border-l-0">
-                <h3 className="text-gray-300 text-lg mb-4">Tower of Hanoi Graphical View:</h3>
+              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-20 border-gray-400 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-b mobile:pb-4 mobile:mb-6 mobile:border-l-0">
+                <h3 className="text-gray-300 text-base mb-4 text-center">Tower of Hanoi Graphical View:</h3>
                 <div className="flex-grow w-full bg-[#1a1a1a] p-4 rounded-md border border-gray-700 flex items-center justify-center">
                   <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet">
                     <rect
