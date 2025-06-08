@@ -128,7 +128,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
         )}
       </p>
 
-      <div className="flex-grow bg-[#1a1a1a] p-4 rounded-md border border-gray-700 relative flex mobile:flex-col">
+      <div className="flex-grow bg-[#1a1a1a] p-4 rounded-md border border-gray-700 relative flex mobile:flex-col-reverse">
         {visualizationLog.length === 0 ? (
           <p className="text-center text-gray-500 mt-10 w-full">Run the function to see the visualization here.</p>
         ) : (
@@ -186,13 +186,9 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
             {/* Call Stack / ToH Graphical View Section */}
             {selectedProblem !== 'towerOfHanoi' ? (
               // Call Stack for Factorial and Fibonacci (unchanged)
-              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0">
+              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pb-4 mobile:mb-6 mobile:border-b mobile:border-l-0">
                 <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
-                {currentNarration && (
-                  <div className="bg-purple-700 text-white px-4 py-2 rounded-lg shadow-lg text-center z-10 text-sm animate-fade-in-down mb-4">
-                    {currentNarration}
-                  </div>
-                )}
+                
                 <div className="w-full flex-grow flex flex-col-reverse items-center justify-start overflow-y-hidden">
                   {[...visualStack].reverse().map((entry) => (
                     <div
@@ -214,10 +210,16 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                     </div>
                   ))}
                 </div>
+
+                {currentNarration && (
+                  <div className="bg-purple-700 text-white px-4 py-2 mt-4 rounded-lg shadow-lg text-center z-10 text-sm animate-fade-in-down mb-4">
+                    {currentNarration}
+                  </div>
+                )}
               </div>
             ) : (
               // TOWER OF HANOI GRAPHICAL VIEW
-              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-20 border-l border-gray-700 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-t mobile:border-l-0">
+              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-20 border-l border-gray-400 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-b mobile:pb-4 mobile:mb-6 mobile:border-l-0">
                 <h3 className="text-gray-300 text-lg mb-4">Tower of Hanoi Graphical View:</h3>
                 <div className="flex-grow w-full bg-[#1a1a1a] p-4 rounded-md border border-gray-700 flex items-center justify-center">
                   <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet">
@@ -277,9 +279,6 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                     ))}
                   </svg>
                 </div>
-                <p className="text-gray-400 text-xs mt-4">
-                  (Moves are shown in the Event Log on the left.)
-                </p>
               </div>
             )}
           </>
