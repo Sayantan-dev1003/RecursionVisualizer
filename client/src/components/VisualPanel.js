@@ -38,7 +38,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
         } else if (entry.problem === 'towerOfHanoi') {
           narrationText = `CALL: TowerOfHanoi(${entry.n}, ${entry.source}, ${entry.auxiliary}, ${entry.destination})`;
         } else if (entry.problem === 'permutations') {
-          narrationText = `CALL: Permutations(${entry.inputArray.join('')}) - Current: [${entry.currentPerm.join(', ')}]`;
+          narrationText = `CALL: Permutations(depth=${entry.indent}, current: [${Array.isArray(entry.currentPerm) ? entry.currentPerm.join(', ') : ''}])`;
         }
       } else if (entry.type === 'return') {
         if (entry.problem === 'factorial' || entry.problem === 'fibonacci') {
@@ -46,16 +46,31 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
         } else if (entry.problem === 'towerOfHanoi') {
           narrationText = `RETURN: from TowerOfHanoi(${entry.fromN})`;
         } else if (entry.problem === 'permutations') {
-          narrationText = `RETURN: from Permutations - Final Result: ${entry.value}`;
+          let returnValue = entry.value;
+          try {
+            const parsedValue = JSON.parse(entry.value);
+            if (Array.isArray(parsedValue) && parsedValue.every(Array.isArray)) {
+                returnValue = `[${parsedValue.map(p => `[${p.join(', ')}]`).join(', ')}]`;
+            } else if (Array.isArray(parsedValue)) {
+                returnValue = `[${parsedValue.join(', ')}]`;
+            }
+          } catch (e) {
+          }
+          narrationText = `RETURN: from Permutations - Value: ${returnValue}`;
         }
       } else if (entry.type === 'move' && entry.problem === 'towerOfHanoi') {
         narrationText = `MOVE Disk ${entry.disk} from ${entry.from} to ${entry.to}`;
       } else if (entry.type === 'found_permutation' && entry.problem === 'permutations') {
-        narrationText = `Found Permutation: [${entry.permutation.join(', ')}]`;
+        narrationText = `Found Permutation: [${Array.isArray(entry.permutation) ? entry.permutation.join(', ') : ''}]`;
+      } else if (entry.type === 'add_element' && entry.problem === 'permutations') {
+        narrationText = `ADD: '${entry.element}' to current permutation. New: [${Array.isArray(entry.currentPerm) ? entry.currentPerm.join(', ') : ''}]`;
+      } else if (entry.type === 'remove_element' && entry.problem === 'permutations') {
+        narrationText = `REMOVE: '${entry.element}' from current permutation. New: [${Array.isArray(entry.currentPerm) ? entry.currentPerm.join(', ') : ''}]`;
+      } else if (entry.type === 'try_element' && entry.problem === 'permutations') {
+        narrationText = `TRY: Placing '${entry.element}' at depth ${entry.atIndex}.`;
       }
       setCurrentNarration(narrationText);
 
-      // --- Visualization Logic based on selectedProblem ---
       if (selectedProblem === 'factorial' || selectedProblem === 'fibonacci') {
         setHanoiPegs(ALL_PEG_LABELS.reduce((acc, label) => ({ ...acc, [label]: [] }), {}));
         setCurrentPermutation([]);
@@ -68,7 +83,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
             tempStack.push({ ...logEntry, visualId: logEntry.id });
           } else if (logEntry.type === 'return') {
             const callIndex = tempStack.findIndex(
-              item => item.visualId === logEntry.id && item.type === 'call'
+              item => item.visualId === logEntry.id && item.type === 'call' && item.problem === logEntry.problem
             );
             if (callIndex !== -1) {
               tempStack.splice(callIndex, 1);
@@ -97,9 +112,14 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
         for (let i = 0; i <= currentStep; i++) {
           const logEntry = visualizationLog[i];
           if (logEntry.type === 'move' && logEntry.problem === 'towerOfHanoi') {
-            const diskToMove = tempHanoiPegs[logEntry.from].pop();
+            const sourcePegDisks = [...tempHanoiPegs[logEntry.from]];
+            const destPegDisks = [...tempHanoiPegs[logEntry.to]];
+
+            const diskToMove = sourcePegDisks.pop();
             if (diskToMove) {
-              tempHanoiPegs[logEntry.to].push(diskToMove);
+              destPegDisks.push(diskToMove);
+              tempHanoiPegs[logEntry.from] = sourcePegDisks;
+              tempHanoiPegs[logEntry.to] = destPegDisks;
             }
           }
         }
@@ -109,38 +129,54 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
         setHanoiPegs(ALL_PEG_LABELS.reduce((acc, label) => ({ ...acc, [label]: [] }), {}));
         setNumDisks(0);
 
-        let currentPerm = [];
-        let allPerms = [];
+        let tempCurrentPermutation = [];
+        let tempAllPermutations = [];
+        let permutationStateStack = [];
 
         for (let i = 0; i <= currentStep; i++) {
           const logEntry = visualizationLog[i];
           if (logEntry.problem === 'permutations') {
             if (logEntry.type === 'call') {
-              currentPerm = [...logEntry.currentPerm];
-              if (logEntry.results) {
-                allPerms = [...logEntry.results];
-              }
-            } else if (logEntry.type === 'found_permutation') {
-              allPerms = [...logEntry.results];
-            } else if (logEntry.type === 'return') {
-              if (logEntry.results) {
-                allPerms = [...logEntry.results];
-              }
-              if (logEntry.indent > 0 && i > 0) {
-                const prevCallEntry = visualizationLog.slice(0, i).reverse().find(
-                  (prev) => prev.type === 'call' && prev.problem === 'permutations' && prev.indent === logEntry.indent - 1
-                );
-                if (prevCallEntry) {
-                  currentPerm = [...prevCallEntry.currentPerm];
+                permutationStateStack.push({
+                    currentPerm: Array.isArray(logEntry.currentPerm) ? [...logEntry.currentPerm] : [],
+                    used: Array.isArray(logEntry.usedElements) ? [...logEntry.usedElements] : [],
+                });
+            } else if (logEntry.type === 'add_element') {
+                if (permutationStateStack.length > 0) {
+                    permutationStateStack[permutationStateStack.length - 1].currentPerm = Array.isArray(logEntry.currentPerm) ? [...logEntry.currentPerm] : [];
+                    permutationStateStack[permutationStateStack.length - 1].used = Array.isArray(logEntry.usedElements) ? [...logEntry.usedElements] : [];
                 }
-              } else if (logEntry.indent === 0) {
-                currentPerm = [];
-              }
+            } else if (logEntry.type === 'remove_element') {
+                if (permutationStateStack.length > 0) {
+                    permutationStateStack[permutationStateStack.length - 1].currentPerm = Array.isArray(logEntry.currentPerm) ? [...logEntry.currentPerm] : [];
+                    permutationStateStack[permutationStateStack.length - 1].used = Array.isArray(logEntry.usedElements) ? [...logEntry.usedElements] : [];
+                }
+            } else if (logEntry.type === 'found_permutation') {
+                tempAllPermutations = Array.isArray(logEntry.results) ? [...logEntry.results] : [];
+            } else if (logEntry.type === 'return') {
+                if (permutationStateStack.length > 0) {
+                    if (logEntry.indent === 0) {
+                        tempCurrentPermutation = [];
+                        if (logEntry.value) {
+                             try {
+                                tempAllPermutations = JSON.parse(logEntry.value);
+                            } catch (e) {
+                            }
+                        }
+                    } else {
+                        permutationStateStack.pop();
+                    }
+                }
             }
           }
         }
-        setCurrentPermutation(currentPerm);
-        setAllPermutations(allPerms);
+
+        if (permutationStateStack.length > 0) {
+            setCurrentPermutation(permutationStateStack[permutationStateStack.length - 1].currentPerm);
+        } else {
+            setCurrentPermutation([]);
+        }
+        setAllPermutations(tempAllPermutations);
       }
     }
   }, [currentStep, visualizationLog, selectedProblem]);
@@ -161,7 +197,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
     return colors[(diskNumber - 1) % colors.length];
   };
 
-  // SVG dimensions for Tower of Hanoi
+  // SVG dimensions
   const svgWidth = 400;
   const svgHeight = 250;
   const pegWidth = 10;
@@ -208,7 +244,13 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                             ? 'bg-yellow-800 border-l-4 border-yellow-500 text-yellow-100'
                             : entry.type === 'found_permutation'
                               ? 'bg-purple-800 border-l-4 border-purple-500 text-purple-100'
-                              : 'bg-gray-700 text-gray-300'
+                              : entry.type === 'add_element'
+                                ? 'bg-indigo-800 border-l-4 border-indigo-500 text-indigo-100'
+                                : entry.type === 'remove_element'
+                                  ? 'bg-red-800 border-l-4 border-red-500 text-red-100'
+                                  : entry.type === 'try_element'
+                                    ? 'bg-teal-800 border-l-4 border-teal-500 text-teal-100'
+                                    : 'bg-gray-700 text-gray-300'
                       }
                       ${index === currentStep ? 'ring-2 ring-purple-400 scale-105' : ''}
                     `}
@@ -219,7 +261,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                         CALL: {formatProblemName(entry.problem)}
                         {entry.problem === 'towerOfHanoi' && `(${entry.n}, ${entry.source}, ${entry.auxiliary}, ${entry.destination})`}
                         {(entry.problem === 'factorial' || entry.problem === 'fibonacci') && `(${entry.n})`}
-                        {entry.problem === 'permutations' && `(${entry.inputArray.join('')}, current: [${entry.currentPerm.join(', ')}])`}
+                        {entry.problem === 'permutations' && `(depth=${entry.indent}, current: [${Array.isArray(entry.currentPerm) ? entry.currentPerm.join(', ') : ''}])`}
                       </p>
                     )}
                     {entry.type === 'return' && (
@@ -228,8 +270,23 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                         {(entry.problem === 'factorial' || entry.problem === 'fibonacci') && (
                           <><span className="font-bold">{entry.value}</span> (from {formatProblemName(entry.problem)}(<span className="font-bold">{entry.fromN}</span>))</>
                         )}
-                        {entry.problem === 'towerOfHanoi' && `from TowerOfHanoi(${entry.fromN})`}
-                        {entry.problem === 'permutations' && `Final Result: ${entry.value}`}
+                        {entry.problem === 'permutations' && (
+                          <>
+                            Value: <span className="font-bold">{(() => {
+                              try {
+                                const parsed = JSON.parse(entry.value);
+                                if (Array.isArray(parsed) && parsed.every(Array.isArray)) {
+                                  return `[${parsed.map(p => `[${p.join(', ')}]`).join(', ')}]`;
+                                } else if (Array.isArray(parsed)) {
+                                  return `[${parsed.join(', ')}]`;
+                                }
+                                return entry.value;
+                              } catch (e) {
+                                return entry.value;
+                              }
+                            })()}</span> (from Permutations)
+                          </>
+                        )}
                       </p>
                     )}
                     {entry.type === 'move' && entry.problem === 'towerOfHanoi' && (
@@ -239,7 +296,22 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                     )}
                     {entry.type === 'found_permutation' && entry.problem === 'permutations' && (
                       <p className="font-mono text-sm mobile:text-[0.7rem] text-purple-100">
-                        FOUND: [<span className="font-bold">{entry.permutation.join(', ')}</span>]
+                        FOUND: [<span className="font-bold">{Array.isArray(entry.permutation) ? entry.permutation.join(', ') : ''}</span>]
+                      </p>
+                    )}
+                    {entry.type === 'add_element' && entry.problem === 'permutations' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-indigo-100">
+                        ADD: <span className="font-bold">{entry.element}</span> to current permutation. New: [<span className="font-bold">{Array.isArray(entry.currentPerm) ? entry.currentPerm.join(', ') : ''}</span>]
+                      </p>
+                    )}
+                    {entry.type === 'remove_element' && entry.problem === 'permutations' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-red-100">
+                        REMOVE: <span className="font-bold">{entry.element}</span> from current permutation. New: [<span className="font-bold">{Array.isArray(entry.currentPerm) ? entry.currentPerm.join(', ') : ''}</span>]
+                      </p>
+                    )}
+                    {entry.type === 'try_element' && entry.problem === 'permutations' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-teal-100">
+                        TRY: Placing <span className="font-bold">{entry.element}</span> at depth <span className="font-bold">{entry.atIndex}</span>. Current: [<span className="font-bold">{Array.isArray(entry.currentPerm) ? entry.currentPerm.join(', ') : ''}</span>]
                       </p>
                     )}
                   </div>
