@@ -212,7 +212,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
   });
 
   return (
-    <section className='w-full min-h-full bg-[#202020] rounded-lg p-6 flex flex-col'>
+    <section className='w-full min-h-full bg-[#202020] rounded-lg p-6 flex flex-col mobile:p-4'>
       <h2 className='text-gray-200 font-bold text-2xl mb-4'>
         {formatProblemName(selectedProblem)} Visualization
       </h2>
