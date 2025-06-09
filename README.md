@@ -17,15 +17,15 @@ The **Recursion Visualizer** is an interactive web application designed to help 
 ## Features
 
 * **Interactive Recursion Visualization:**
-    * **Call Stack:** Visually observe how function calls are pushed onto and popped from the call stack during execution (for Factorial and Fibonacci).
+    * **Call Stack:** Visually observe how function calls are pushed onto and popped from the call stack during execution (for Factorial, Fibonacci and Permutations).
     * **Event Log:** A chronological log of every function call, return, and specific actions (like disk moves in Tower of Hanoi).
 * **Step-by-Step Playback Controls:**
     * `Run`: Starts the visualization.
     * `Play/Pause`: Control the automatic animation playback.
     * `Previous/Next`: Manually step through the visualization one event at a time.
-* **Dynamic Code Display:** View the source code for each problem in different programming languages (e.g., JavaScript).
+* **Dynamic Code Display:** View the source code for each problem in different programming languages (JavaScript, TypeScript, Python, Java, C++).
 * **Contextual Problem Descriptions:** Detailed explanations of each recursive problem, including mathematical formulas, examples, and constraints.
-* **Interactive Input:** Users can provide custom input values for problems (e.g., `n` for Factorial/Fibonacci, number of disks for Tower of Hanoi).
+* **Interactive Input:** Users can provide custom input values for problems (e.g., `n` for Factorial/Fibonacci, number of disks for Tower of Hanoi, string for permutations).
 * **Enhanced User Experience with Tooltips:** Hover over code sections (general explanation), visualization elements (stack frames, log entries), and control buttons for contextual information.
 * **Responsive Design:** Optimized for viewing on various screen sizes, from desktop to mobile.
 
@@ -36,6 +36,7 @@ The visualizer currently supports the following classic recursion problems:
 1.  **Factorial (n!)**: Calculates the product of all positive integers less than or equal to `n`.
 2.  **Fibonacci Sequence**: Calculates the `n`-th number in the Fibonacci sequence.
 3.  **Tower of Hanoi**: Solves the classic puzzle of moving disks between three pegs.
+4.  **Permutations**: Showing how elements are added and removed from the current permutation as the search space is explored
 
 ## Technologies Used
 
@@ -101,10 +102,6 @@ To get a local copy up and running, follow these simple steps.
 
 ## Future Enhancements
 
-* **Improved Fibonacci Visualization:** Implement a tree-like visualization for Fibonacci to better illustrate its branching recursive calls.
-* **Graphical Tower of Hanoi:** Develop a dynamic graphical representation for the Tower of Hanoi puzzle, showing disks moving between pegs.
-* **Visualization Speed Control:** Add a slider to adjust the animation speed during playback.
-* **Code Highlighting based on Current Step:** Highlight the currently executing line of code in the `CodeDisplay` during the visualization.
-* **Additional Problems:** Implement visualizations for other recursive algorithms (e.g., Merge Sort, Quick Sort, DFS/BFS on a simple graph).
-* **Quiz/Challenge Mode:** Introduce small quizzes or challenges related to the current step or problem to test user understanding.
-* **Accessibility Improvements:** Enhance keyboard navigation and screen reader support.
+* **More Algorithms:**  Expand the library of supported algorithms (e.g., Merge Sort, Quick Sort, N-Queens, Sudoku Solver) to demonstrate a wider range of recursive patterns.
+* **Custom Code Input:**  Allow users to paste their own recursive function code (in JavaScript initially) and automatically instrument it for visualization. This would involve parsing the code and injecting logging statements.
+* **Enhanced Visual Feedback:** For algorithms like Fibonacci, visualize the recursion tree structure to show redundant calculations.
