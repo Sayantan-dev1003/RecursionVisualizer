@@ -15,7 +15,7 @@ const Header = ({ selectedProblem, setSelectedProblem }) => {
                 suppressHydrationWarning
                 value={selectedProblem}
                 onChange={handleProblemChange}
-                className='bg-[#282828] w-1/3 max-w-xs p-2 rounded-md text-gray-300 border-none outline-none montserrat text-lg mobile:text-xs mobile:p-1.5'
+                className='bg-[#282828] w-1/3 max-w-xs p-2 rounded-md text-gray-300 cursor-pointer border-none outline-none montserrat text-lg mobile:text-xs mobile:p-1.5'
             >
                 <option value="factorial">Factorial</option>
                 <option value="fibonacci">Fibonacci</option>
