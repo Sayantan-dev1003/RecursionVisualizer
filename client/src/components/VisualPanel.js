@@ -7,6 +7,8 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
   const [currentNarration, setCurrentNarration] = useState("");
   const [hanoiPegs, setHanoiPegs] = useState({ A: [], B: [], C: [] });
   const [numDisks, setNumDisks] = useState(0);
+  const [currentPermutation, setCurrentPermutation] = useState([]);
+  const [allPermutations, setAllPermutations] = useState([]);
 
   const ALL_PEG_LABELS = ['A', 'B', 'C'];
 
@@ -21,6 +23,8 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
       const resetPegs = ALL_PEG_LABELS.reduce((acc, label) => ({ ...acc, [label]: [] }), {});
       setHanoiPegs(resetPegs);
       setNumDisks(0);
+      setCurrentPermutation([]);
+      setAllPermutations([]);
       return;
     }
 
@@ -28,20 +32,35 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
       const entry = visualizationLog[currentStep];
 
       let narrationText = "";
-      if (entry.type === 'call' && entry.problem !== 'towerOfHanoi') {
-        narrationText = `Calling ${formatProblemName(entry.problem)}(${entry.n})`;
-      } else if (entry.type === 'return' && entry.problem !== 'towerOfHanoi') {
-        narrationText = `Returning ${entry.value} from ${formatProblemName(entry.problem)}(${entry.fromN})`;
+      if (entry.type === 'call') {
+        if (entry.problem === 'factorial' || entry.problem === 'fibonacci') {
+          narrationText = `Calling ${formatProblemName(entry.problem)}(${entry.n})`;
+        } else if (entry.problem === 'towerOfHanoi') {
+          narrationText = `CALL: TowerOfHanoi(${entry.n}, ${entry.source}, ${entry.auxiliary}, ${entry.destination})`;
+        } else if (entry.problem === 'permutations') {
+          narrationText = `CALL: Permutations(${entry.inputArray.join('')}) - Current: [${entry.currentPerm.join(', ')}]`;
+        }
+      } else if (entry.type === 'return') {
+        if (entry.problem === 'factorial' || entry.problem === 'fibonacci') {
+          narrationText = `Returning ${entry.value} from ${formatProblemName(entry.problem)}(${entry.fromN})`;
+        } else if (entry.problem === 'towerOfHanoi') {
+          narrationText = `RETURN: from TowerOfHanoi(${entry.fromN})`;
+        } else if (entry.problem === 'permutations') {
+          narrationText = `RETURN: from Permutations - Final Result: ${entry.value}`;
+        }
       } else if (entry.type === 'move' && entry.problem === 'towerOfHanoi') {
         narrationText = `MOVE Disk ${entry.disk} from ${entry.from} to ${entry.to}`;
-      } else if (entry.type === 'call' && entry.problem === 'towerOfHanoi') {
-        narrationText = `CALL: TowerOfHanoi(${entry.n}, ${entry.source}, ${entry.auxiliary}, ${entry.destination})`;
-      } else if (entry.type === 'return' && entry.problem === 'towerOfHanoi') {
-        narrationText = `RETURN: from TowerOfHanoi(${entry.fromN})`;
+      } else if (entry.type === 'found_permutation' && entry.problem === 'permutations') {
+        narrationText = `Found Permutation: [${entry.permutation.join(', ')}]`;
       }
       setCurrentNarration(narrationText);
 
-      if (selectedProblem !== 'towerOfHanoi') {
+      // --- Visualization Logic based on selectedProblem ---
+      if (selectedProblem === 'factorial' || selectedProblem === 'fibonacci') {
+        setHanoiPegs(ALL_PEG_LABELS.reduce((acc, label) => ({ ...acc, [label]: [] }), {}));
+        setCurrentPermutation([]);
+        setAllPermutations([]);
+
         const tempStack = [];
         for (let i = 0; i <= currentStep; i++) {
           const logEntry = visualizationLog[i];
@@ -57,31 +76,71 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
           }
         }
         setVisualStack(tempStack);
-      } else {
+      } else if (selectedProblem === 'towerOfHanoi') {
         setVisualStack([]);
+        setCurrentPermutation([]);
+        setAllPermutations([]);
+
         let initialDisks = 0;
         const tempHanoiPegs = ALL_PEG_LABELS.reduce((acc, label) => ({ ...acc, [label]: [] }), {});
 
         const firstCallEntry = visualizationLog.find(e => e.type === 'call' && e.problem === 'towerOfHanoi');
         if (firstCallEntry) {
-            initialDisks = firstCallEntry.n;
-            setNumDisks(initialDisks);
+          initialDisks = firstCallEntry.n;
+          setNumDisks(initialDisks);
 
-            for (let i = initialDisks; i >= 1; i--) {
-                tempHanoiPegs[firstCallEntry.source].push(i);
-            }
+          for (let i = initialDisks; i >= 1; i--) {
+            tempHanoiPegs[firstCallEntry.source].push(i);
+          }
         }
 
         for (let i = 0; i <= currentStep; i++) {
-            const logEntry = visualizationLog[i];
-            if (logEntry.type === 'move' && logEntry.problem === 'towerOfHanoi') {
-                const diskToMove = tempHanoiPegs[logEntry.from].pop();
-                if (diskToMove) {
-                    tempHanoiPegs[logEntry.to].push(diskToMove);
-                }
+          const logEntry = visualizationLog[i];
+          if (logEntry.type === 'move' && logEntry.problem === 'towerOfHanoi') {
+            const diskToMove = tempHanoiPegs[logEntry.from].pop();
+            if (diskToMove) {
+              tempHanoiPegs[logEntry.to].push(diskToMove);
             }
+          }
         }
-        setHanoiPegs({ ...tempHanoiPegs }); 
+        setHanoiPegs({ ...tempHanoiPegs });
+      } else if (selectedProblem === 'permutations') {
+        setVisualStack([]);
+        setHanoiPegs(ALL_PEG_LABELS.reduce((acc, label) => ({ ...acc, [label]: [] }), {}));
+        setNumDisks(0);
+
+        let currentPerm = [];
+        let allPerms = [];
+
+        for (let i = 0; i <= currentStep; i++) {
+          const logEntry = visualizationLog[i];
+          if (logEntry.problem === 'permutations') {
+            if (logEntry.type === 'call') {
+              currentPerm = [...logEntry.currentPerm];
+              if (logEntry.results) {
+                allPerms = [...logEntry.results];
+              }
+            } else if (logEntry.type === 'found_permutation') {
+              allPerms = [...logEntry.results];
+            } else if (logEntry.type === 'return') {
+              if (logEntry.results) {
+                allPerms = [...logEntry.results];
+              }
+              if (logEntry.indent > 0 && i > 0) {
+                const prevCallEntry = visualizationLog.slice(0, i).reverse().find(
+                  (prev) => prev.type === 'call' && prev.problem === 'permutations' && prev.indent === logEntry.indent - 1
+                );
+                if (prevCallEntry) {
+                  currentPerm = [...prevCallEntry.currentPerm];
+                }
+              } else if (logEntry.indent === 0) {
+                currentPerm = [];
+              }
+            }
+          }
+        }
+        setCurrentPermutation(currentPerm);
+        setAllPermutations(allPerms);
       }
     }
   }, [currentStep, visualizationLog, selectedProblem]);
@@ -102,7 +161,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
     return colors[(diskNumber - 1) % colors.length];
   };
 
-  // SVG dimensions
+  // SVG dimensions for Tower of Hanoi
   const svgWidth = 400;
   const svgHeight = 250;
   const pegWidth = 10;
@@ -123,7 +182,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
       </h2>
       <p className='text-gray-400 text-sm mb-4'>
         Watch the function calls and returns as the recursion unfolds here.
-      {selectedProblem === 'towerOfHanoi' && numDisks > 0 && (
+        {selectedProblem === 'towerOfHanoi' && numDisks > 0 && (
           <span className="font-bold ml-2"> (N = {numDisks} Disks)</span>
         )}
       </p>
@@ -141,26 +200,36 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                   <div
                     key={`${entry.id}-${index}`}
                     className={`w-[70%] p-3 rounded-md shadow-sm transition-all duration-300 ease-in-out
-                      ${entry.type === 'call' && entry.problem !== 'towerOfHanoi'
+                      ${entry.type === 'call'
                         ? 'bg-blue-800 border-l-4 border-blue-500 text-white'
-                        : entry.type === 'return' && entry.problem !== 'towerOfHanoi'
+                        : entry.type === 'return'
                           ? 'bg-green-800 border-l-4 border-green-500 text-white'
-                          : entry.type === 'move' && entry.problem === 'towerOfHanoi'
+                          : entry.type === 'move'
                             ? 'bg-yellow-800 border-l-4 border-yellow-500 text-yellow-100'
-                            : 'bg-gray-700 text-gray-300'
+                            : entry.type === 'found_permutation'
+                              ? 'bg-purple-800 border-l-4 border-purple-500 text-purple-100'
+                              : 'bg-gray-700 text-gray-300'
                       }
                       ${index === currentStep ? 'ring-2 ring-purple-400 scale-105' : ''}
                     `}
                     style={{ marginLeft: `${entry.indent * 20}px` }}
                   >
-                    {entry.type === 'call' && entry.problem !== 'towerOfHanoi' && (
+                    {entry.type === 'call' && (
                       <p className="font-mono text-sm mobile:text-[0.7rem] text-gray-100">
-                        CALL: {formatProblemName(entry.problem)}(<span className="font-bold">{entry.n}</span>)
+                        CALL: {formatProblemName(entry.problem)}
+                        {entry.problem === 'towerOfHanoi' && `(${entry.n}, ${entry.source}, ${entry.auxiliary}, ${entry.destination})`}
+                        {(entry.problem === 'factorial' || entry.problem === 'fibonacci') && `(${entry.n})`}
+                        {entry.problem === 'permutations' && `(${entry.inputArray.join('')}, current: [${entry.currentPerm.join(', ')}])`}
                       </p>
                     )}
-                    {entry.type === 'return' && entry.problem !== 'towerOfHanoi' && (
+                    {entry.type === 'return' && (
                       <p className="font-mono text-sm mobile:text-[0.7rem] text-gray-100">
-                        RETURN: <span className="font-bold">{entry.value}</span> (from {formatProblemName(entry.problem)}(<span className="font-bold">{entry.fromN}</span>))
+                        RETURN:
+                        {(entry.problem === 'factorial' || entry.problem === 'fibonacci') && (
+                          <><span className="font-bold">{entry.value}</span> (from {formatProblemName(entry.problem)}(<span className="font-bold">{entry.fromN}</span>))</>
+                        )}
+                        {entry.problem === 'towerOfHanoi' && `from TowerOfHanoi(${entry.fromN})`}
+                        {entry.problem === 'permutations' && `Final Result: ${entry.value}`}
                       </p>
                     )}
                     {entry.type === 'move' && entry.problem === 'towerOfHanoi' && (
@@ -168,14 +237,9 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                         MOVE: Disk <span className="font-bold">{entry.disk}</span> from {entry.from} to {entry.to}
                       </p>
                     )}
-                    {entry.type === 'call' && entry.problem === 'towerOfHanoi' && (
-                      <p className="font-mono text-sm mobile:text-[0.7rem] text-blue-100">
-                        CALL: TowerOfHanoi(<span className="font-bold">{entry.n}</span>, {entry.source}, {entry.auxiliary}, {entry.destination})
-                      </p>
-                    )}
-                    {entry.type === 'return' && entry.problem === 'towerOfHanoi' && (
-                      <p className="font-mono text-sm mobile:text-[0.7rem] text-green-100">
-                        RETURN: from TowerOfHanoi(<span className="font-bold">{entry.fromN}</span>)
+                    {entry.type === 'found_permutation' && entry.problem === 'permutations' && (
+                      <p className="font-mono text-sm mobile:text-[0.7rem] text-purple-100">
+                        FOUND: [<span className="font-bold">{entry.permutation.join(', ')}</span>]
                       </p>
                     )}
                   </div>
@@ -183,12 +247,12 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
               </div>
             </div>
 
-            {/* Call Stack / ToH Graphical View Section */}
-            {selectedProblem !== 'towerOfHanoi' ? (
-              // Call Stack for Factorial and Fibonacci (unchanged)
+            {/* Dynamic Visualization Section */}
+            {selectedProblem === 'factorial' || selectedProblem === 'fibonacci' ? (
+              // Call Stack for Factorial and Fibonacci
               <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pb-4 mobile:mb-6 mobile:border-b mobile:border-l-0">
                 <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
-                
+
                 <div className="w-full flex-grow flex flex-col-reverse items-center justify-start overflow-y-hidden">
                   {[...visualStack].reverse().map((entry) => (
                     <div
@@ -217,7 +281,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                   </div>
                 )}
               </div>
-            ) : (
+            ) : selectedProblem === 'towerOfHanoi' ? (
               // TOWER OF HANOI GRAPHICAL VIEW
               <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-20 border-gray-400 pl-4 mobile:pl-0 mobile:pt-4 mobile:border-b mobile:pb-4 mobile:mb-6 mobile:border-l-0">
                 <h3 className="text-gray-300 text-base mb-4 text-center">Tower of Hanoi Graphical View:</h3>
@@ -249,7 +313,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                         x={pegXPositions[pegId]}
                         y={svgHeight - baseHeight - pegHeight - 10}
                         textAnchor="middle"
-                        fill="#D1D5DB" 
+                        fill="#D1D5DB"
                         fontSize="14"
                         fontFamily="monospace"
                       >
@@ -272,7 +336,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                             height={diskHeight}
                             fill={diskColor}
                             rx="5" ry="5"
-                            className="transition-all duration-300 ease-in-out" 
+                            className="transition-all duration-300 ease-in-out"
                           />
                         );
                       })
@@ -280,7 +344,39 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                   </svg>
                 </div>
               </div>
-            )}
+            ) : selectedProblem === 'permutations' ? (
+              // PERMUTATIONS VISUALIZATION
+              <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-start pt-4 pl-4 mobile:pl-0 mobile:pb-4 mobile:mb-6 mobile:border-b mobile:border-l-0">
+                <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Permutations State:</h3>
+                <div className="w-full flex-grow flex flex-col items-center justify-start overflow-y-auto">
+                  <div className="w-full p-3 my-2 rounded-md shadow-lg bg-gray-700 border-l-4 border-gray-500 text-white">
+                    <p className="font-mono text-sm md:text-base text-gray-100 text-center">
+                      Current Permutation: [<span className="font-bold">{currentPermutation.join(', ')}</span>]
+                    </p>
+                  </div>
+                  <div className="w-full p-3 my-2 rounded-md shadow-lg bg-gray-800 border-l-4 border-gray-600 text-white">
+                    <p className="font-mono text-sm md:text-base text-gray-100 text-center">
+                      Found Permutations:
+                    </p>
+                    <div className="text-xs text-gray-300 text-center mt-1">
+                      {allPermutations.length > 0 ? (
+                        allPermutations.map((perm, idx) => (
+                          <span key={idx} className="block">[{perm.join(', ')}]</span>
+                        ))
+                      ) : (
+                        <span>None yet</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {currentNarration && (
+                  <div className="bg-purple-700 text-white px-4 py-2 mt-4 rounded-lg shadow-lg text-center z-10 text-sm animate-fade-in-down mb-4">
+                    {currentNarration}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </>
         )}
       </div>

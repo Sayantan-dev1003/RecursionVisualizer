@@ -1,10 +1,8 @@
-'use client'; // This component needs to run on the client side
+'use client';
 
 import React from 'react';
 
-// LanguageSelector functional component
 const LanguageSelector = ({ selectedLanguage, onSelectLanguage }) => {
-  // Array of supported languages
   const languages = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C++'];
 
   return (
@@ -14,7 +12,6 @@ const LanguageSelector = ({ selectedLanguage, onSelectLanguage }) => {
           suppressHydrationWarning
           key={lang}
           onClick={() => onSelectLanguage(lang)}
-          // Apply different styles based on whether the language is selected
           className={`px-4 py-2 text-xs rounded-lg font-medium transition-colors duration-200
             ${selectedLanguage === lang
               ? 'bg-blue-600 text-white shadow-md'

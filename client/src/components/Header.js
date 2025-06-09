@@ -20,6 +20,7 @@ const Header = ({ selectedProblem, setSelectedProblem }) => {
                 <option value="factorial">Factorial</option>
                 <option value="fibonacci">Fibonacci</option>
                 <option value="towerOfHanoi">Tower of Hanoi</option>
+                <option value="permutations">Permutations</option>
             </select>
         </header>
     );

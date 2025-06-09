@@ -80,6 +80,27 @@ const ProblemDescriptions = {
     inputType: 'number',
     defaultInput: 3,
   },
+  permutations: {
+    title: 'Permutations',
+    description: 'A permutation of a set of elements is an arrangement of its members into a sequence or linear order. For example, for the set {1, 2, 3}, the permutations are (1,2,3), (1,3,2), (2,1,3), (2,3,1), (3,1,2), and (3,2,1).',
+    mathematicalFormula: 'The number of permutations of \\(n\\) distinct items is given by \\(n!\\).',
+    task: 'Your task is to generate all possible permutations of a given array of distinct numbers/characters.',
+    examples: [
+      {
+        input: '["A", "B"]',
+        output: '[["A", "B"], ["B", "A"]]',
+        explanation: 'For input ["A", "B"], there are 2 permutations: ["A", "B"] and ["B", "A"].',
+      },
+      {
+        input: '["1", "2", "3"]',
+        output: '[["1", "2", "3"], ["1", "3", "2"], ["2", "1", "3"], ["2", "3", "1"], ["3", "1", "2"], ["3", "2", "1"]]',
+        explanation: 'For input ["1", "2", "3"], there are 3! = 6 permutations.',
+      },
+    ],
+    constraints: ['Input array length 1 <= n <= 4)', 'Elements are distinct characters/numbers.'],
+    defaultInput: "ABC",
+    inputType: 'text',
+  },
 };
 
 export default ProblemDescriptions;

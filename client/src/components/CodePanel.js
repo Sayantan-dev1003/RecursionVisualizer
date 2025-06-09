@@ -8,10 +8,12 @@ import problemDescriptions from '../data/ProblemDescription.js';
 
 const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIsPlaying, currentStep, visualizationLog, isPlaying, animationIntervalRef }) => {
     const [selectedLanguage, setSelectedLanguage] = useState('JavaScript');
-    const [problemInput, setProblemInput] = useState(problemDescriptions[selectedProblem]?.defaultInput || 0);
+    // Initialize problemInput based on the selectedProblem's defaultInput
+    const [problemInput, setProblemInput] = useState(problemDescriptions[selectedProblem]?.defaultInput || '');
 
     useEffect(() => {
-        setProblemInput(problemDescriptions[selectedProblem]?.defaultInput || 0);
+        // Reset input and visualization when problem changes
+        setProblemInput(problemDescriptions[selectedProblem]?.defaultInput || '');
         setVisualizationLog([]);
         setCurrentStep(0);
         setIsPlaying(false);
@@ -94,8 +96,73 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
             tempLog.push({ type: 'return', id: currentCallId, problem: 'towerOfHanoi', indent, fromN: n });
         };
 
+        // Permutations Logic
+        const instrumentedPermutations = (arr, indent = 0, currentPermutation = [], used = new Set(), results = []) => {
+            const currentCallId = callIdCounter++;
+            tempLog.push({
+                type: 'call',
+                id: currentCallId,
+                problem: 'permutations',
+                n: currentPermutation.length, 
+                inputArray: arr,
+                currentPerm: [...currentPermutation],
+                indent,
+                status: 'active',
+                results: [...results]
+            });
 
-        // Call the appropriate function based on selectedProblem
+            if (currentPermutation.length === arr.length) {
+                results.push([...currentPermutation]);
+                tempLog.push({
+                    type: 'found_permutation',
+                    id: callIdCounter++,
+                    problem: 'permutations',
+                    permutation: [...currentPermutation],
+                    indent: indent + 1,
+                    results: [...results]
+                });
+                tempLog.push({
+                    type: 'return',
+                    id: currentCallId,
+                    problem: 'permutations',
+                    value: JSON.stringify([...currentPermutation]),
+                    indent,
+                    fromN: currentPermutation.length,
+                    results: [...results]
+                });
+                return;
+            }
+
+            for (let i = 0; i < arr.length; i++) {
+                if (!used.has(arr[i])) {
+                    used.add(arr[i]);
+                    currentPermutation.push(arr[i]);
+
+                    instrumentedPermutations(arr, indent + 1, currentPermutation, used, results);
+
+                    currentPermutation.pop();
+                    used.delete(arr[i]);
+                }
+            }
+
+            const callEntryIndex = tempLog.findIndex(entry => entry.id === currentCallId && entry.type === 'call' && entry.problem === 'permutations' && entry.n === currentPermutation.length && entry.status === 'active');
+            if (callEntryIndex !== -1) {
+              tempLog[callEntryIndex] = { ...tempLog[callEntryIndex], status: 'returned', results: [...results] };
+            }
+            if (currentPermutation.length === 0 && indent === 0) {
+                tempLog.push({
+                    type: 'return',
+                    id: currentCallId,
+                    problem: 'permutations',
+                    value: JSON.stringify(results),
+                    indent,
+                    fromN: arr.length,
+                    results: [...results]
+                });
+            }
+            return results;
+        };
+
         switch (selectedProblem) {
             case 'factorial':
                 instrumentedFactorial(problemInput);
@@ -105,6 +172,10 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
                 break;
             case 'towerOfHanoi':
                 instrumentedTowerOfHanoi(problemInput, 'A', 'B', 'C');
+                break;
+            case 'permutations':
+                const inputArr = String(problemInput).split('');
+                instrumentedPermutations(inputArr);
                 break;
             default:
                 console.error("Unknown problem selected:", selectedProblem);
@@ -212,10 +283,16 @@ const CodePanel = ({ selectedProblem, setVisualizationLog, setCurrentStep, setIs
                 <input
                     id="problem-input"
                     type={currentProblemData.inputType}
-                    min={currentProblemData.constraints[0] ? parseInt(currentProblemData.constraints[0].match(/\d+/)[0]) : undefined}
-                    max={currentProblemData.constraints[0] ? parseInt(currentProblemData.constraints[0].match(/<= (\d+)/)?.[1]) : undefined}
+                    min={currentProblemData.constraints[0] && currentProblemData.inputType === 'number' ? parseInt(currentProblemData.constraints[0].match(/\d+/)[0]) : undefined}
+                    max={currentProblemData.constraints[0] && currentProblemData.inputType === 'number' ? parseInt(currentProblemData.constraints[0].match(/<= (\d+)/)?.[1]) : undefined}
                     value={problemInput}
-                    onChange={(e) => setProblemInput(parseInt(e.target.value) || 0)}
+                    onChange={(e) => {
+                        if (currentProblemData.inputType === 'number') {
+                            setProblemInput(parseInt(e.target.value) || 0);
+                        } else {
+                            setProblemInput(e.target.value);
+                        }
+                    }}
                     suppressHydrationWarning
                     className="w-24 p-2 bg-[#3a3a3a] text-gray-200 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
