@@ -213,10 +213,10 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
 
   return (
     <section className='w-full min-h-full bg-[#202020] rounded-lg p-6 flex flex-col mobile:p-4'>
-      <h2 className='text-gray-200 font-bold text-2xl mb-4'>
+      <h2 className='text-gray-200 font-bold text-2xl mb-4 mobile:text-xl'>
         {formatProblemName(selectedProblem)} Visualization
       </h2>
-      <p className='text-gray-400 text-sm mb-4'>
+      <p className='text-gray-400 text-sm mb-4 mobile:text-xs'>
         Watch the function calls and returns as the recursion unfolds here.
         {selectedProblem === 'towerOfHanoi' && numDisks > 0 && (
           <span className="font-bold ml-2"> (N = {numDisks} Disks)</span>
@@ -225,12 +225,12 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
 
       <div className="flex-grow bg-[#1a1a1a] p-4 rounded-md border border-gray-700 relative flex mobile:flex-col-reverse">
         {visualizationLog.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10 w-full">Run the function to see the visualization here.</p>
+          <p className="text-center text-gray-500 mt-10 w-full mobile:text-sm">Run the function to see the visualization here.</p>
         ) : (
           <>
             {/* Event Log Section */}
             <div className="w-3/5 mobile:w-full h-[60vh] overflow-y-auto pr-4 mobile:pr-0 mobile:pb-4">
-              <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Event Log:</h3>
+              <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1 mobile:text-base">Event Log:</h3>
               <div className="space-y-2 p-2">
                 {visualizationLog.slice(0, currentStep + 1).map((entry, index) => (
                   <div
@@ -323,7 +323,7 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
             {selectedProblem === 'factorial' || selectedProblem === 'fibonacci' ? (
               // Call Stack for Factorial and Fibonacci
               <div className="w-2/5 mobile:w-full h-full flex flex-col items-center justify-end pt-4 pl-4 mobile:pl-0 mobile:pb-4 mobile:mb-6 mobile:border-b mobile:border-l-0">
-                <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
+                <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1 mobile:text-base">Call Stack:</h3>
 
                 <div className="w-full flex-grow flex flex-col-reverse items-center justify-start overflow-y-hidden">
                   {[...visualStack].map((entry) => (
