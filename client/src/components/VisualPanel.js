@@ -326,14 +326,14 @@ const VisualPanel = ({ visualizationLog, currentStep, selectedProblem }) => {
                 <h3 className="text-gray-300 text-lg mb-2 sticky top-0 bg-[#1a1a1a] z-10 py-1">Call Stack:</h3>
 
                 <div className="w-full flex-grow flex flex-col-reverse items-center justify-start overflow-y-hidden">
-                  {[...visualStack].reverse().map((entry) => (
+                  {[...visualStack].map((entry) => (
                     <div
                       key={entry.visualId}
                       className={`
                         w-10/12 p-3 my-1 rounded-md shadow-lg
                         transition-all duration-300 ease-in-out transform
                         ${entry.type === 'call'
-                          ? 'bg-blue-700 border-l-4 border-blue-400 text-white animate-fade-in-up'
+                          ? 'bg-blue-700 border-l-4 border-blue-400 text-white animate-fade-in-down'
                           : ''
                         }
                         ${entry.visualId === visualizationLog[currentStep]?.id && visualizationLog[currentStep]?.type === 'call' ? 'ring-2 ring-purple-400 scale-105' : ''}
